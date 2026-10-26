@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Віртуальна лабораторна: період обертання кульки</title>
+<style>
+:root{--bg:#eef2f1;--panel:#fbfdfc;--ink:#14262e;--mute:#53696f;--line:#cfdad8;--acc:#0f766e;--acc-ink:#fff;--warn:#c2410c;--stage:linear-gradient(#dbe7e6,#bfd0cf);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e191d;--panel:#16252a;--ink:#e6f0ee;--mute:#9bb2b3;--line:#2b4046;--acc:#3fc1b0;--acc-ink:#06201c;--warn:#fb923c;--stage:linear-gradient(#1d3238,#102126)}}
+:root[data-theme="dark"]{--bg:#0e191d;--panel:#16252a;--ink:#e6f0ee;--mute:#9bb2b3;--line:#2b4046;--acc:#3fc1b0;--acc-ink:#06201c;--warn:#fb923c;--stage:linear-gradient(#1d3238,#102126)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:12px;display:grid;gap:12px}
+@media(min-width:860px){main{grid-template-columns:1.2fr 1fr;align-items:start}.head{grid-column:1/-1}}
+h1{font-size:1.25rem;margin:4px 0 0;line-height:1.25}
+.sub{color:var(--mute);margin:2px 0 0;font-size:.92rem}
+.stage{position:relative;height:52vh;min-height:300px;border-radius:14px;overflow:hidden;background:var(--stage);border:1px solid var(--line)}
+@media(min-width:860px){.stage{height:calc(100vh - 110px);min-height:420px;position:sticky;top:8px}}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+.cams{position:absolute;left:8px;top:8px;display:flex;gap:6px}
+.cams button{padding:6px 10px;font-size:.85rem}
+.hint{position:absolute;left:8px;bottom:8px;font-size:.8rem;color:var(--mute)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:12px}
+.panel h2{font-size:1rem;margin:0}
+button{font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;padding:10px 14px;cursor:pointer;min-height:44px}
+button.pri{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);font-weight:600}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row>*{flex:1 1 120px}
+label{display:grid;gap:4px;font-size:.92rem}
+label b{font-weight:600}
+input[type=range]{width:100%;accent-color:var(--acc)}
+input[type=number],select{font:inherit;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-height:44px}
+.clock{display:flex;justify-content:space-between;align-items:baseline;gap:8px;background:var(--bg);border-radius:12px;padding:10px 14px}
+.clock .t{font-size:2.2rem;font-weight:700;font-variant-numeric:tabular-nums}
+.clock .n{font-size:1.1rem;font-variant-numeric:tabular-nums;text-align:right}
+.msg{min-height:1.4em;color:var(--warn);font-size:.92rem;margin:0}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tfoot td{font-weight:700;border-bottom:0}
+.res{margin:0;font-size:.95rem}
+.small{font-size:.85rem;color:var(--mute);margin:0}
+</style>
+</head>
+<body>
+<main>
+<div class="head">
+<h1>Лабораторна робота: період обертання кульки по колу</h1>
+<p class="sub">Розкрути кульку, виміряй час кількох обертів і знайди період та швидкість.</p>
+</div>
+
+<div class="stage" id="stage">
+<canvas id="cv" aria-label="3D-модель штатива з кулькою на нитці"></canvas>
+<div class="cams">
+<button data-cam="3d">3D</button><button data-cam="side">Збоку</button><button data-cam="top">Зверху</button>
+</div>
+<div class="hint">Крути пальцем, щоб оглянути з різних боків</div>
+</div>
+
+<div style="display:grid;gap:12px">
+<section class="panel">
+<h2>Налаштування</h2>
+<label><span>Довжина нитки: <b id="vL">45</b> см</span><input id="L" type="range" min="30" max="60" step="1" value="45"></label>
+<label><span>Радіус кола r: <b id="vR">15</b> см</span><input id="R" type="range" min="5" max="15" step="1" value="15"></label>
+<div class="row">
+<label>Швидкість відео<select id="sp"><option value="1">Звичайна</option><option value="0.5">Повільно ×0,5</option><option value="0.25">Дуже повільно ×0,25</option></select></label>
+<button id="spin" class="pri">Розкрутити</button>
+</div>
+<button id="reset">Повернути кульку в спокій</button>
+</section>
+
+<section class="panel">
+<h2>Секундомір</h2>
+<div class="clock"><span class="t" id="sw">0,00 с</span></div>
+<p class="msg" id="msg"></p>
+<div class="row"><button id="swb" class="pri">Старт секундоміра</button><button id="swr">Обнулити</button></div>
+</section>
+
+<section class="panel">
+<h2>Завдання</h2>
+<ol style="margin:0;padding-left:20px;display:grid;gap:6px"><li>Розкрути кульку по червоному колу (кнопка «Розкрутити»).</li><li>Запусти секундомір, коли кулька проходить над червоною лінією.</li><li>Рахуй оберти про себе: кожен прохід над лінією — один оберт.</li><li>Зупини секундомір після потрібної кількості обертів. Запиши в зошит час t і кількість обертів N.</li></ol>
+<button id="chk">Перевірка вчителя</button>
+<p class="small" id="chkt"></p>
+</section>
+</div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const $=id=>document.getElementById(id),G=9.81,H=70,TAU=Math.PI*2;
+let L=45,R=15,speed=1,spin=false,phi=0,rc=0,swOn=false,sw=0,laps=0,trials=[];
+const fmt=(x,d=2)=>x.toFixed(d).replace('.',',');
+const cv=$('cv'),stage=$('stage');
+const ren=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+ren.setPixelRatio(Math.min(devicePixelRatio||1,2));
+const scene=new THREE.Scene();
+const cam=new THREE.PerspectiveCamera(38,1,1,1000);
+scene.add(new THREE.HemisphereLight(0xffffff,0x667788,.85));
+const dl=new THREE.DirectionalLight(0xffffff,.8);dl.position.set(60,120,80);scene.add(dl);
+const M=(c,o={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.6},o));
+const add=(geo,mat,x,y,z)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);scene.add(m);return m};
+// table
+add(new THREE.BoxGeometry(160,2,120),M(0x8da2a6),0,-1,0);
+// stand
+const steel=M(0x4b5a60,{metalness:.6,roughness:.4});
+add(new THREE.BoxGeometry(26,2,20),steel,-30,1,0);
+add(new THREE.CylinderGeometry(.8,.8,H+8,16),steel,-36,(H+8)/2+2,0);
+add(new THREE.CylinderGeometry(.5,.5,36,12),steel,-18,H+3,0).rotation.z=Math.PI/2;
+add(new THREE.TorusGeometry(1.6,.4,8,20),steel,0,H+2.6,0).rotation.x=Math.PI/2;
+// books + paper
+const block=add(new THREE.BoxGeometry(36,1,36),M(0xb7791f),0,0,0);
+const paper=add(new THREE.BoxGeometry(34,.2,34),M(0xffffff,{roughness:.9}),0,0,0);
+// ball and string
+const ball=add(new THREE.SphereGeometry(1.6,24,16),M(0xc9d3d6,{metalness:.9,roughness:.25}),0,0,0);
+const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(6),3));
+const str=new THREE.Line(sg,new THREE.LineBasicMaterial({color:0x222222}));str.frustumCulled=false;scene.add(str);
+// marks on paper
+const markMat=new THREE.LineBasicMaterial({color:0xdc2626});
+let marks=null;
+function yPaper(){return H-L-2.4}
+function buildMarks(){
+ if(marks){scene.remove(marks);marks.children.forEach(c=>c.geometry.dispose())}
+ marks=new THREE.Group();const y=yPaper()+.2,p=[];
+ for(let i=0;i<=96;i++){const a=i/96*TAU;p.push(new THREE.Vector3(R*Math.cos(a),y,R*Math.sin(a)))}
+ marks.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(p),markMat));
+ marks.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,y,0),new THREE.Vector3(R+3,y,0)]),markMat));
+ scene.add(marks);
+}
+function layout(){
+ const y=yPaper();block.scale.y=y;block.position.y=y/2;paper.position.y=y+.1;buildMarks();
+}
+const theory=()=>{const h=Math.sqrt(L*L-R*R)/100;return TAU*Math.sqrt(h/G)};
+function place(){
+ const h=Math.sqrt(L*L-rc*rc),by=H-h,bx=rc*Math.cos(phi),bz=rc*Math.sin(phi);
+ ball.position.set(bx,by,bz);
+ const a=sg.attributes.position.array;a.set([0,H+2.6,0,bx,by,bz]);sg.attributes.position.needsUpdate=true;
+}
+// camera orbit
+let az=.7,el=.4,dist=165;
+function setCam(){const t=new THREE.Vector3(-8,32,0);
+ cam.position.set(t.x+dist*Math.cos(el)*Math.sin(az),t.y+dist*Math.sin(el),t.z+dist*Math.cos(el)*Math.cos(az));cam.lookAt(t)}
+document.querySelectorAll('[data-cam]').forEach(b=>b.onclick=()=>{
+ const v=b.dataset.cam;[az,el,dist]=v==='3d'?[.7,.4,165]:v==='side'?[0,.08,170]:[0,1.5,150];setCam()});
+let drag=null;
+cv.addEventListener('pointerdown',e=>{drag=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',e=>{if(!drag)return;
+ az-=(e.clientX-drag[0])*.01;el=Math.max(.02,Math.min(1.5,el+(e.clientY-drag[1])*.01));drag=[e.clientX,e.clientY];setCam()});
+cv.addEventListener('pointerup',()=>drag=null);
+cv.addEventListener('wheel',e=>{e.preventDefault();dist=Math.max(80,Math.min(260,dist+e.deltaY*.1));setCam()},{passive:false});
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;ren.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
+new ResizeObserver(resize).observe(stage);
+
+// loop
+let last=performance.now();
+function frame(now){
+ const dt=Math.min((now-last)/1000,.05)*speed;last=now;
+ if(spin){
+  const w=TAU/theory(),prev=phi;phi+=w*dt;rc+=(R-rc)*Math.min(1,dt*3);
+  if(swOn)sw+=dt;
+ }
+ place();ren.render(scene,cam);requestAnimationFrame(frame);
+ $('sw').textContent=fmt(sw)+' с';
+}
+function ui(){}
+// controls
+function setParams(){L=+$('L').value;R=+$('R').value;$('vL').textContent=L;$('vR').textContent=R;
+ if(R>=L)R=L-1;if(!spin)rc=0;layout()}
+$('L').oninput=$('R').oninput=()=>{setParams();$('chkt').textContent=''};
+$('sp').onchange=e=>speed=+e.target.value;
+$('spin').onclick=()=>{spin=!spin;$('spin').textContent=spin?'Пауза':'Розкрутити'};
+$('reset').onclick=()=>{spin=false;phi=0;rc=0;swOn=false;sw=0;laps=0;ui();$('swb').textContent='Старт секундоміра';$('spin').textContent='Розкрутити';$('msg').textContent=''};
+$('swb').onclick=()=>{
+ if(!swOn){if(!spin){$('msg').textContent='Спочатку розкрути кульку.';return}
+  sw=0;laps=0;swOn=true;ui();$('msg').textContent='';$('swb').textContent='Стоп секундоміра'}
+ else{swOn=false;$('swb').textContent='Старт секундоміра'}};
+$('swr').onclick=()=>{swOn=false;sw=0;$('swb').textContent='Старт секундоміра';$('msg').textContent=''};
+$('chk').onclick=()=>{$('chkt').textContent='Розрахункове значення для цих налаштувань: T ≈ '+fmt(theory(),3)+' с, v ≈ '+fmt(TAU*R/100/theory(),2)+' м/с'};
+setParams();setCam();resize();ui();requestAnimationFrame(frame);
+</script>
+</body>
+</html>
