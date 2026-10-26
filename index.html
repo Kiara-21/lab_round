@@ -63,6 +63,13 @@ tfoot td{font-weight:700;border-bottom:0}
 
 <div style="display:grid;gap:12px">
 <section class="panel">
+<h2>Секундомір</h2>
+<div class="clock"><span class="t" id="sw">0,00 с</span></div>
+<p class="msg" id="msg"></p>
+<div class="row"><button id="swb" class="pri">Старт секундоміра</button><button id="swr">Обнулити</button></div>
+</section>
+
+<section class="panel">
 <h2>Налаштування</h2>
 <label><span>Довжина нитки: <b id="vL">45</b> см</span><input id="L" type="range" min="30" max="60" step="1" value="45"></label>
 <label><span>Радіус кола r: <b id="vR">15</b> см</span><input id="R" type="range" min="5" max="15" step="1" value="15"></label>
@@ -73,12 +80,7 @@ tfoot td{font-weight:700;border-bottom:0}
 <button id="reset">Повернути кульку в спокій</button>
 </section>
 
-<section class="panel">
-<h2>Секундомір</h2>
-<div class="clock"><span class="t" id="sw">0,00 с</span></div>
-<p class="msg" id="msg"></p>
-<div class="row"><button id="swb" class="pri">Старт секундоміра</button><button id="swr">Обнулити</button></div>
-</section>
+
 
 <section class="panel">
 <h2>Завдання</h2>
